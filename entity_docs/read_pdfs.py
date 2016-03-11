@@ -65,23 +65,27 @@ def display_name(filepath, year):
         try:
             doc = slate.PDF(f, 'password')
             num_pages = len(doc)
-            # get year!
             i = 0
             while i < num_pages and i < 5:
-                if 'budget' in doc[i].lower():
-                    is_budget = True
-                if 'comprehensive' in doc[i].lower():
-                    is_cafr = True
-                if 'capital' in doc[i].lower():
+                contents = doc[i][:100]
+
+                if 'capital' in contents.lower():
                     is_capital_improvements = True
+                    break
+                if 'budget' in contents.lower():
+                    is_budget = True
+                    break
+                if 'comprehensive' in contents.lower():
+                    is_cafr = True
+                    break
         except:
             pass
 
-    if is_budget and not (is_cafr or is_capital_improvements):
+    if is_budget:
         return year + ' Budget'
-    elif is_cafr and not (is_budget or is_capital_improvements):
+    elif is_cafr:
         return year + ' CAFR'
-    elif is_capital_improvements and not (is_cafr):
+    elif is_capital_improvements:
         return year + ' Capital Improvements'
     else:
         return year + ' Unknown'

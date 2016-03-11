@@ -3,6 +3,7 @@ import scrapy
 from entity_docs.items import EntityDocsItem
 
 from unidecode import unidecode
+import urllib
 
 
 def ascii_convert(phrase):
@@ -13,32 +14,33 @@ def ascii_convert(phrase):
         return phrase.strip()
 
 def get_urls():
+    ids = []
     urls = []
     with open('clean_urls.csv', 'rU') as f:
         for line in f.readlines():
             cells = line.split(',')
+            id = cells[0]
+            ids.append(id)
             url = ascii_convert(cells[-1])
             urls.append(url)
-    return urls
+    return ids[100:130], urls[100:130]
 
-def get_domains(urls):
-    new_urls = []
-    for url in urls:
-        try:
-            domain = url.split('//')[1]
-            domain = domain.split('/')[0]
-            new_urls.append(domain)
-        except:
-            pass
-    return new_urls
+def extract_domain(url):
+    try:
+        domain = url.split('//')[1]
+        domain = domain.split('/')[0]
+        return domain
+    except:
+        return url
 
 
 class EntityDocsSpider(scrapy.Spider):
     name = "entity_docs"
-    urls = get_urls()[100:130]
-    print get_domains(urls)
-    allowed_domains = get_domains(urls)
+    ids, urls = get_urls()
+    domains = map(extract_domain, urls)
+    allowed_domains = domains
     start_urls = urls
+    id_lookup = dict(zip(domains, ids))
 
     def parse(self, response):
         links = response.xpath('//a/@href').extract()
@@ -50,8 +52,11 @@ class EntityDocsSpider(scrapy.Spider):
                 yield scrapy.Request(url, callback=self.parse)
 
     def parse_pdf(self, response):
+        domain = extract_domain(response.url).split("www.")[-1]
         filename = response.url.split('/')[-1]
         item = EntityDocsItem()
-        item['filename'] = filename
+
+        item['entity_id'] = self.id_lookup[domain]
+        item['filename'] = urllib.unquote(filename).decode('utf8')
         item['file'] = response.body
         yield item

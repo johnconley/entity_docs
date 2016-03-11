@@ -9,6 +9,6 @@ import scrapy
 
 
 class EntityDocsItem(scrapy.Item):
+    entity_id = scrapy.Field()
     filename = scrapy.Field()
     file = scrapy.Field()
-    pass

@@ -18,6 +18,6 @@ class EntityDocsPipeline(object):
 
     def process_item(self, item, spider):
         k = Key(self.bucket)
-        k.key = '/'.join(['development', 'pdfs', 'test', item['filename']])
+        k.key = '/'.join(['development', 'pdfs', 'test', item['entity_id'], item['filename']])
         k.set_contents_from_string(item['file'])
         return item
